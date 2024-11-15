@@ -3,25 +3,28 @@ from datetime import date, datetime, timedelta
 
 from convertdate import islamic
 
-from constants import (
-    CURR_ISLAMIC_MONTH,
-    CURR_ISLAMIC_YEAR,
-    DEFAULT_LEAVE_DAYS,
-    NEXT_YEAR,
-    TODAY,
-)
+from constants import CURRENT_YEAR, DEFAULT_LEAVE_DAYS, NEXT_YEAR, TODAY
+from getters import get_user_input
 
 locale.setlocale(locale.LC_TIME, "tr_TR.UTF-8")
 
 
-def get_ramadan_celebrations() -> list[str]:
+def get_ramadan_celebrations(year: int = CURRENT_YEAR) -> list[str]:
     """Get celebration dates of Ramadan."""
-    if CURR_ISLAMIC_MONTH < 9:
-        ramadan_year = CURR_ISLAMIC_YEAR
-    else:
-        ramadan_year = CURR_ISLAMIC_YEAR + 1
+    selected_day = TODAY
+    if year != CURRENT_YEAR:
+        selected_day = date(year, 1, 1)
 
-    ramadan_end = islamic.to_gregorian(ramadan_year, 10, 1)
+    islamic_year, islamic_month, _ = islamic.from_gregorian(
+        selected_day.year, selected_day.month, selected_day.day
+    )
+
+    if islamic_month < 9:
+        ramadan_year = islamic_year
+    else:
+        ramadan_year = islamic_year + 1
+
+    ramadan_end = islamic.to_gregorian(ramadan_year, 10, 1)  # Şevval 1 (after Ramadan)
     ramadan_end_date = date(*ramadan_end) - timedelta(days=1)
 
     date_range = []
@@ -32,17 +35,24 @@ def get_ramadan_celebrations() -> list[str]:
     return date_range
 
 
-def get_eid_al_adha_celebrations() -> list[str]:
+def get_eid_al_adha_celebrations(year: int = CURRENT_YEAR) -> list[str]:
     """Get celebration dates of Eid al-Adha."""
-    if (CURR_ISLAMIC_MONTH < 12) or (
-        CURR_ISLAMIC_MONTH == 12
-        and islamic.to_gregorian(CURR_ISLAMIC_YEAR, 12, 9) > TODAY
-    ):
-        eid_al_adha_year = CURR_ISLAMIC_YEAR
-    else:
-        eid_al_adha_year = CURR_ISLAMIC_YEAR + 1
+    selected_day = TODAY
+    if year != CURRENT_YEAR:
+        selected_day = date(year, 1, 1)
 
-    eid_al_adha_date = islamic.to_gregorian(eid_al_adha_year, 12, 9)
+    islamic_year, islamic_month, _ = islamic.from_gregorian(
+        selected_day.year, selected_day.month, selected_day.day
+    )
+
+    if (islamic_month < 12) or (
+        islamic_month == 12 and islamic.to_gregorian(islamic_year, 12, 9) > selected_day
+    ):
+        eid_al_adha_year = islamic_year
+    else:
+        eid_al_adha_year = islamic_year + 1
+
+    eid_al_adha_date = islamic.to_gregorian(eid_al_adha_year, 12, 9)  # Zilhicce
 
     next_eid_al_adha = date(*eid_al_adha_date)
 
@@ -53,17 +63,19 @@ def get_eid_al_adha_celebrations() -> list[str]:
     return date_range
 
 
-holidays = {
-    "Yılbaşı": f"{NEXT_YEAR}-01-01",
-    "Ramazan Bayramı": get_ramadan_celebrations(),
-    "Ulusal Egemenlik ve Çocuk Bayramı": f"{NEXT_YEAR}-04-23",
-    "İşçi Bayramı": f"{NEXT_YEAR}-05-01",
-    "Gençlik ve Spor Bayramı": f"{NEXT_YEAR}-05-19",
-    "Kurban Bayramı": get_eid_al_adha_celebrations(),
-    "Demokrasi ve Milli Birlik Günü": f"{NEXT_YEAR}-07-15",
-    "Zafer Bayramı": f"{NEXT_YEAR}-08-30",
-    "Cumhuriyet Bayramı": [f"{NEXT_YEAR}-10-29"],
-}
+def get_holidays(year: int) -> dict[str, str | list[str]]:
+    """Get all holidays for the given year."""
+    return {
+        "Yılbaşı": f"{year}-01-01",
+        "Ramazan Bayramı": get_ramadan_celebrations(year),
+        "Ulusal Egemenlik ve Çocuk Bayramı": f"{year}-04-23",
+        "İşçi Bayramı": f"{year}-05-01",
+        "Gençlik ve Spor Bayramı": f"{year}-05-19",
+        "Kurban Bayramı": get_eid_al_adha_celebrations(year),
+        "Demokrasi ve Milli Birlik Günü": f"{year}-07-15",
+        "Zafer Bayramı": f"{year}-08-30",
+        "Cumhuriyet Bayramı": f"{year}-10-29",
+    }
 
 
 def str_to_date(date_str: str) -> date:
@@ -71,6 +83,7 @@ def str_to_date(date_str: str) -> date:
 
 
 def find_efficient_leaves(
+    holiday_dates: list[str | list[str]],
     max_leaves: int = DEFAULT_LEAVE_DAYS,
     count_friday_double: bool = False,
 ) -> list[date]:
@@ -78,7 +91,7 @@ def find_efficient_leaves(
     all_holiday_dates = set()
 
     # Convert all holidays to datetime objects
-    for holiday, dates in holidays.items():
+    for dates in holiday_dates:
         if isinstance(dates, list):
             for date in dates:
                 all_holiday_dates.add(str_to_date(date))
@@ -220,22 +233,23 @@ def calculate_consecutive_days(
 
 def main():
     """Main function to calculate efficient leave days and display statistics."""
-    try:
-        max_leaves = int(
-            input("Maksimum izin günü sayısını girin (varsayılan 14): ").strip() or "14"
-        )
-    except ValueError:
-        print("Geçersiz giriş. Varsayılan değer olan 14 gün kullanılacak.")
-        max_leaves = 14
-
-    count_friday_double = (
-        input("Cuma günleri 2 gün olarak sayılsın mı? (e/h, varsayılan h): ")
-        .strip()
-        .lower()
-        == "e"
+    max_leaves = get_user_input(
+        "Maksimum izin günü sayısını girin (varsayılan 14 gün): ", 14, int
     )
 
-    proposed_leaves = find_efficient_leaves(max_leaves, count_friday_double)
+    is_friday_double = get_user_input(
+        "Cuma günleri 2 iş gün olarak sayılsın mı? (e/h, varsayılan h): ", False
+    )
+    count_friday_double = is_friday_double == "e"
+
+    year = get_user_input(
+        f"Hangi yıl için izinleri hesaplamak istersiniz? (varsayılan: {NEXT_YEAR}): ",
+        NEXT_YEAR,
+        int,
+    )
+
+    holidays = list(get_holidays(year).values())
+    proposed_leaves = find_efficient_leaves(holidays, max_leaves, count_friday_double)
 
     # Calculate actual used days considering Friday double counting
     used_days = sum(
@@ -243,13 +257,13 @@ def main():
     )
 
     print(
-        f"\n{NEXT_YEAR} için Önerilen İzin Günleri ({max_leaves} günün {used_days} günü kullanılıyor):"
+        f"\n{year} için Önerilen İzin Günleri ({max_leaves} günün {used_days} günü kullanılıyor):"
     )
     print("\n".join([f"- {dt.strftime('%d %B %Y, %A')}" for dt in proposed_leaves]))
 
     all_holidays = [
         str_to_date(date)
-        for holiday in holidays.values()
+        for holiday in holidays
         for date in (holiday if isinstance(holiday, list) else [holiday])
     ]
 
@@ -257,8 +271,8 @@ def main():
     all_off_days = set()
 
     # Tüm haftasonlarını ekle
-    current = datetime(NEXT_YEAR, 1, 1)
-    end = datetime(NEXT_YEAR, 12, 31)
+    current = datetime(year, 1, 1)
+    end = datetime(year, 12, 31)
     while current <= end:
         if current.weekday() >= 5:  # Cumartesi veya Pazar
             all_off_days.add(current)
@@ -283,7 +297,7 @@ def main():
 
     print(f"\nToplam ardışık tatil günleri: {total_consecutive_days}")
     print(
-        f"{NEXT_YEAR} yılı içerisinde bulunan toplam tatil günleri (tüm haftasonları + resmi tatiller + izinler): {len(all_off_days)}"
+        f"{year} yılı içerisinde bulunan toplam tatil günleri (tüm haftasonları + resmi tatiller + izinler): {len(all_off_days)}"
     )
 
 
