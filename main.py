@@ -1,8 +1,11 @@
+import locale
 from datetime import date, datetime, timedelta
 
 from convertdate import islamic
 
 from constants import CURR_ISLAMIC_MONTH, CURR_ISLAMIC_YEAR, NEXT_YEAR, TODAY
+
+locale.setlocale(locale.LC_TIME, "tr_TR.UTF-8")
 
 
 def get_ramadan_celebrations() -> list[str]:
@@ -176,17 +179,17 @@ def calculate_consecutive_days(proposed_leaves, all_holidays):
     all_dates = sorted(list(all_dates))
 
     # Find consecutive periods
-    for date in all_dates:
+    for dt in all_dates:
         if not current_period:
-            current_period = [date]
+            current_period = [dt]
         else:
             prev_date = current_period[-1]
-            if (date - prev_date).days == 1:
-                current_period.append(date)
+            if (dt - prev_date).days == 1:
+                current_period.append(dt)
             else:
                 if len(current_period) >= 3:  # Only keep periods of 3+ days
                     consecutive_periods.append(current_period)
-                current_period = [date]
+                current_period = [dt]
 
     if current_period and len(current_period) >= 3:
         consecutive_periods.append(current_period)
@@ -208,10 +211,7 @@ def main():
     print(
         f"\n{NEXT_YEAR} için Önerilen İzin Günleri ({max_leaves} günün {len(proposed_leaves)} günü kullanılıyor):"
     )
-    for date in proposed_leaves:
-        print(
-            f"- {date.strftime('%d %B %Y, %A').replace('Monday', 'Pazartesi').replace('Tuesday', 'Salı').replace('Wednesday', 'Çarşamba').replace('Thursday', 'Perşembe').replace('Friday', 'Cuma').replace('Saturday', 'Cumartesi').replace('Sunday', 'Pazar').replace('January', 'Ocak').replace('February', 'Şubat').replace('March', 'Mart').replace('April', 'Nisan').replace('May', 'Mayıs').replace('June', 'Haziran').replace('July', 'Temmuz').replace('August', 'Ağustos').replace('September', 'Eylül').replace('October', 'Ekim').replace('November', 'Kasım').replace('December', 'Aralık')}"
-        )
+    print("\n".join([f"- {dt.strftime('%d %B %Y, %A')}" for dt in proposed_leaves]))
 
     all_holidays = [
         str_to_date(date)
@@ -244,7 +244,7 @@ def main():
         days = (end - start).days + 1
         total_consecutive_days += days
         print(
-            f"- {start.strftime('%d %B').replace('January', 'Ocak').replace('February', 'Şubat').replace('March', 'Mart').replace('April', 'Nisan').replace('May', 'Mayıs').replace('June', 'Haziran').replace('July', 'Temmuz').replace('August', 'Ağustos').replace('September', 'Eylül').replace('October', 'Ekim').replace('November', 'Kasım').replace('December', 'Aralık')} ile {end.strftime('%d %B').replace('January', 'Ocak').replace('February', 'Şubat').replace('March', 'Mart').replace('April', 'Nisan').replace('May', 'Mayıs').replace('June', 'Haziran').replace('July', 'Temmuz').replace('August', 'Ağustos').replace('September', 'Eylül').replace('October', 'Ekim').replace('November', 'Kasım').replace('December', 'Aralık')} arası: {days} gün"
+            f"- {start.strftime('%d %B %Y')} ile {end.strftime('%d %B %Y')} arası: {days} gün",
         )
 
     print(f"\nToplam ardışık tatil günleri: {total_consecutive_days}")
