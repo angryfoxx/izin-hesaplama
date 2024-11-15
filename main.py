@@ -16,7 +16,7 @@ holidays = {
 def str_to_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d')
 
-def find_efficient_leaves(max_leaves=14):
+def find_efficient_leaves(max_leaves=14, count_friday_double=False):
     all_holiday_dates = set()
     
     # Convert all holidays to datetime objects
@@ -94,8 +94,14 @@ def find_efficient_leaves(max_leaves=14):
         if leaves_count >= max_leaves:
             break
         if date not in proposed_leaves:
+            # Count Friday as 2 days if enabled
+            if count_friday_double and date.weekday() == 4:  # Friday
+                if leaves_count + 2 > max_leaves:
+                    continue
+                leaves_count += 2
+            else:
+                leaves_count += 1
             proposed_leaves.append(date)
-            leaves_count += 1
     
     return sorted(proposed_leaves)
 
@@ -149,9 +155,14 @@ def main():
         print("Geçersiz giriş. Varsayılan değer olan 14 gün kullanılacak.")
         max_leaves = 14
     
-    proposed_leaves = find_efficient_leaves(max_leaves)
+    count_friday_double = input("Cuma günleri 2 gün olarak sayılsın mı? (e/h, varsayılan h): ").strip().lower() == 'e'
     
-    print(f"\n2025 için Önerilen İzin Günleri ({max_leaves} günün {len(proposed_leaves)} günü kullanılıyor):")
+    proposed_leaves = find_efficient_leaves(max_leaves, count_friday_double)
+    
+    # Calculate actual used days considering Friday double counting
+    used_days = sum(2 if count_friday_double and date.weekday() == 4 else 1 for date in proposed_leaves)
+    
+    print(f"\n2025 için Önerilen İzin Günleri ({max_leaves} günün {used_days} günü kullanılıyor):")
     for date in proposed_leaves:
         print(f"- {date.strftime('%d %B %Y, %A').replace('Monday', 'Pazartesi').replace('Tuesday', 'Salı').replace('Wednesday', 'Çarşamba').replace('Thursday', 'Perşembe').replace('Friday', 'Cuma').replace('Saturday', 'Cumartesi').replace('Sunday', 'Pazar').replace('January', 'Ocak').replace('February', 'Şubat').replace('March', 'Mart').replace('April', 'Nisan').replace('May', 'Mayıs').replace('June', 'Haziran').replace('July', 'Temmuz').replace('August', 'Ağustos').replace('September', 'Eylül').replace('October', 'Ekim').replace('November', 'Kasım').replace('December', 'Aralık')}")
     
