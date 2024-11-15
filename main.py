@@ -70,7 +70,7 @@ def str_to_date(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 
-def find_efficient_leaves(max_leaves: int = DEFAULT_LEAVE_DAYS) -> list[date]:
+def find_efficient_leaves(max_leaves: int = DEFAULT_LEAVE_DAYS, count_friday_double: bool = False) -> list[date]:
     """Find efficient leave days based on holidays and weekends."""
     all_holiday_dates = set()
 
@@ -156,9 +156,14 @@ def find_efficient_leaves(max_leaves: int = DEFAULT_LEAVE_DAYS) -> list[date]:
         if leaves_count >= max_leaves:
             break
         if date not in proposed_leaves:
+            # Count Friday as 2 days if enabled
+            if count_friday_double and date.weekday() == 4:  # Friday
+                if leaves_count + 2 > max_leaves:
+                    continue
+                leaves_count += 2
+            else:
+                leaves_count += 1
             proposed_leaves.append(date)
-            leaves_count += 1
-
     return sorted(proposed_leaves)
 
 
@@ -220,10 +225,15 @@ def main():
         print("Geçersiz giriş. Varsayılan değer olan 14 gün kullanılacak.")
         max_leaves = 14
 
-    proposed_leaves = find_efficient_leaves(max_leaves)
+    count_friday_double = input("Cuma günleri 2 gün olarak sayılsın mı? (e/h, varsayılan h): ").strip().lower() == 'e'
+
+    proposed_leaves = find_efficient_leaves(max_leaves, count_friday_double)
+    
+    # Calculate actual used days considering Friday double counting
+    used_days = sum(2 if count_friday_double and date.weekday() == 4 else 1 for date in proposed_leaves)
 
     print(
-        f"\n{NEXT_YEAR} için Önerilen İzin Günleri ({max_leaves} günün {len(proposed_leaves)} günü kullanılıyor):"
+        f"\n{NEXT_YEAR} için Önerilen İzin Günleri ({max_leaves} günün {len(used_days)} günü kullanılıyor):"
     )
     print("\n".join([f"- {dt.strftime('%d %B %Y, %A')}" for dt in proposed_leaves]))
 
