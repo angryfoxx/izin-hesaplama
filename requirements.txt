@@ -1,0 +1,2 @@
+convertdate==2.4.0
+PyMeeus==0.5.12

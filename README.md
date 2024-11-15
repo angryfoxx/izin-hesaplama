@@ -1,10 +1,10 @@
-# 2025 İzin Günü Planlayıcı
+# İzin Günü Planlayıcı
 
-Bu Python programı, 2025 yılı için en verimli izin günlerini planlamanıza yardımcı olur. Resmi tatilleri ve hafta sonlarını dikkate alarak, en uzun tatil dönemlerini oluşturacak şekilde izin günlerinizi optimize eder.
+Bu Python programı, bulunduğunuz yıl için en verimli izin günlerini planlamanıza yardımcı olur. Resmi tatilleri ve hafta sonlarını dikkate alarak, en uzun tatil dönemlerini oluşturacak şekilde izin günlerinizi optimize eder.
 
 ## Özellikler
 
-- 2025 yılının tüm resmi tatillerini içerir
+- Bulunan yılın tüm resmi tatillerini içerir
 - Maksimum izin gün sayısını belirleyebilme
 - Hafta sonları ve resmi tatillerle birleştirilmiş en verimli izin günlerini önerir
 - Oluşan uzun hafta sonu ve tatil dönemlerini listeler
@@ -15,11 +15,15 @@ Bu Python programı, 2025 yılı için en verimli izin günlerini planlamanıza 
 1. Programı çalıştırın:
 
 ```bash
+pip install -r requirements.txt
 python main.py
 ```
 
 2. İstediğiniz maksimum izin gün sayısını girin (varsayılan: 14 gün)
-3. Program size:
+3. Cuma günleri 2 iş gün olarak sayılsın mı? (e/h, varsayılan h)
+4. Hangi yıl için izinleri hesaplamak istersiniz? (varsayılan: 2025): 
+   - Program, 2025 yılı için önerilen izin günlerini ve uzun tatil dönemlerini gösterecektir.
+5. Program size:
    - Önerilen izin günlerini
    - Oluşan uzun tatil dönemlerini
    - Toplam tatil günü sayısını gösterecektir
