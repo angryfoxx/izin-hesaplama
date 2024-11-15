@@ -3,12 +3,19 @@ from datetime import date, datetime, timedelta
 
 from convertdate import islamic
 
-from constants import CURR_ISLAMIC_MONTH, CURR_ISLAMIC_YEAR, NEXT_YEAR, TODAY
+from constants import (
+    CURR_ISLAMIC_MONTH,
+    CURR_ISLAMIC_YEAR,
+    DEFAULT_LEAVE_DAYS,
+    NEXT_YEAR,
+    TODAY,
+)
 
 locale.setlocale(locale.LC_TIME, "tr_TR.UTF-8")
 
 
 def get_ramadan_celebrations() -> list[str]:
+    """Get celebration dates of Ramadan."""
     if CURR_ISLAMIC_MONTH < 9:
         ramadan_year = CURR_ISLAMIC_YEAR
     else:
@@ -26,6 +33,7 @@ def get_ramadan_celebrations() -> list[str]:
 
 
 def get_eid_al_adha_celebrations() -> list[str]:
+    """Get celebration dates of Eid al-Adha."""
     if (CURR_ISLAMIC_MONTH < 12) or (
         CURR_ISLAMIC_MONTH == 12
         and islamic.to_gregorian(CURR_ISLAMIC_YEAR, 12, 9) > TODAY
@@ -58,11 +66,12 @@ holidays = {
 }
 
 
-def str_to_date(date_str):
+def str_to_date(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 
-def find_efficient_leaves(max_leaves=14):
+def find_efficient_leaves(max_leaves: int = DEFAULT_LEAVE_DAYS) -> list[date]:
+    """Find efficient leave days based on holidays and weekends."""
     all_holiday_dates = set()
 
     # Convert all holidays to datetime objects
@@ -153,7 +162,11 @@ def find_efficient_leaves(max_leaves=14):
     return sorted(proposed_leaves)
 
 
-def calculate_consecutive_days(proposed_leaves, all_holidays):
+def calculate_consecutive_days(
+    proposed_leaves: list[date],
+    all_holidays: list[date],
+) -> list[list[date]]:
+    """Calculate consecutive days from proposed leaves and all holidays."""
     consecutive_periods = []
     current_period = []
 
@@ -198,6 +211,7 @@ def calculate_consecutive_days(proposed_leaves, all_holidays):
 
 
 def main():
+    """Main function to calculate efficient leave days and display statistics."""
     try:
         max_leaves = int(
             input("Maksimum izin günü sayısını girin (varsayılan 14): ").strip() or "14"
