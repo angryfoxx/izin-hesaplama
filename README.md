@@ -20,7 +20,10 @@ python main.py
 ```
 
 2. İstediğiniz maksimum izin gün sayısını girin (varsayılan: 14 gün)
-3. Program size:
+3. Cuma günleri 2 iş gün olarak sayılsın mı? (e/h, varsayılan h)
+4. Hangi yıl için izinleri hesaplamak istersiniz? (varsayılan: 2025): 
+   - Program, 2025 yılı için önerilen izin günlerini ve uzun tatil dönemlerini gösterecektir.
+5. Program size:
    - Önerilen izin günlerini
    - Oluşan uzun tatil dönemlerini
    - Toplam tatil günü sayısını gösterecektir
